@@ -81,17 +81,16 @@ func New(config Config) func(http.Handler) http.Handler {
 						return
 					}
 				}
-				var hh http.Header
 				if r.Method == http.MethodOptions {
-					hh = preflightHeaders
-				} else {
-					hh = headers
+					for k, v := range preflightHeaders {
+						h[k] = v
+					}
+					w.WriteHeader(http.StatusOK)
+					return
 				}
-				for k, v := range hh {
+				for k, v := range headers {
 					h[k] = v
 				}
-				w.WriteHeader(http.StatusOK)
-				return
 			}
 			h.ServeHTTP(w, r)
 		})
