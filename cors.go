@@ -37,6 +37,7 @@ const (
 func New(config Config) func(http.Handler) http.Handler {
 	preflightHeaders := make(http.Header)
 	headers := make(http.Header)
+	allowOrigins := make(map[string]bool)
 
 	if config.AllowCredentials {
 		preflightHeaders.Set(headerACACredentials, "true")
@@ -59,18 +60,30 @@ func New(config Config) func(http.Handler) http.Handler {
 		preflightHeaders.Add(headerVary, headerACRMethos)
 		preflightHeaders.Add(headerVary, headerACRHeaders)
 		headers.Set(headerVary, headerOrigin)
+
+		for _, v := range config.AllowOrigins {
+			allowOrigins[v] = true
+		}
 	}
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			{
+			if origin := r.Header.Get(headerOrigin); len(origin) > 0 {
+				h := w.Header()
+				if !config.AllowAllOrigins {
+					if allowOrigins[origin] {
+						h.Set(headerACAOrigin, origin)
+					} else {
+						w.WriteHeader(http.StatusForbidden)
+						return
+					}
+				}
 				var hh http.Header
 				if r.Method == http.MethodOptions {
 					hh = preflightHeaders
 				} else {
 					hh = headers
 				}
-				h := w.Header()
 				for k, v := range hh {
 					h[k] = v
 				}
