@@ -87,6 +87,8 @@ func New(config Config) func(http.Handler) http.Handler {
 				for k, v := range hh {
 					h[k] = v
 				}
+				w.WriteHeader(http.StatusOK)
+				return
 			}
 			h.ServeHTTP(w, r)
 		})
