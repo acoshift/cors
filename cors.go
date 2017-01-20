@@ -46,6 +46,9 @@ func New(config Config) func(http.Handler) http.Handler {
 	if len(config.AllowMethods) > 0 {
 		preflightHeaders.Set(headerACAMethods, strings.Join(config.AllowMethods, ","))
 	}
+	if len(config.AllowHeaders) > 0 {
+		preflightHeaders.Set(headerACAHeaders, strings.Join(config.AllowHeaders, ","))
+	}
 	if len(config.ExposeHeaders) > 0 {
 		headers.Set(headerACEHeaders, strings.Join(config.ExposeHeaders, ","))
 	}
