@@ -9,10 +9,12 @@ import (
 	"time"
 
 	"github.com/acoshift/header"
+	"github.com/acoshift/middleware"
 )
 
 // Config is the cors config
 type Config struct {
+	Skipper          middleware.Skipper
 	AllowAllOrigins  bool
 	AllowOrigins     []string
 	AllowMethods     []string
@@ -24,6 +26,10 @@ type Config struct {
 
 // New creates new CORS middleware
 func New(config Config) func(http.Handler) http.Handler {
+	if config.Skipper == nil {
+		config.Skipper = middleware.DefaultSkipper
+	}
+
 	preflightHeaders := make(http.Header)
 	headers := make(http.Header)
 	allowOrigins := make(map[string]bool)
@@ -60,6 +66,11 @@ func New(config Config) func(http.Handler) http.Handler {
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if config.Skipper(r) {
+				h.ServeHTTP(w, r)
+				return
+			}
+
 			if origin := r.Header.Get(header.Origin); len(origin) > 0 {
 				h := w.Header()
 				if !config.AllowAllOrigins {
