@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/acoshift/header"
 )
 
 // Config is the cors config
@@ -20,19 +22,6 @@ type Config struct {
 	MaxAge           time.Duration
 }
 
-const (
-	headerACACredentials = "Access-Control-Allow-Credentials"
-	headerACAMethods     = "Access-Control-Allow-Methods"
-	headerACAHeaders     = "Access-Control-Allow-Headers"
-	headerACMaxAge       = "Access-Control-Max-Age"
-	headerACEHeaders     = "Access-Control-Expose-Headers"
-	headerACAOrigin      = "Access-Control-Allow-Origin"
-	headerVary           = "Vary"
-	headerOrigin         = "Origin"
-	headerACRMethos      = "Access-Control-Request-Method"
-	headerACRHeaders     = "Access-Control-Request-Headers"
-)
-
 // New creates new CORS middleware
 func New(config Config) func(http.Handler) http.Handler {
 	preflightHeaders := make(http.Header)
@@ -40,29 +29,29 @@ func New(config Config) func(http.Handler) http.Handler {
 	allowOrigins := make(map[string]bool)
 
 	if config.AllowCredentials {
-		preflightHeaders.Set(headerACACredentials, "true")
-		headers.Set(headerACACredentials, "true")
+		preflightHeaders.Set(header.AccessControlAllowCredentials, "true")
+		headers.Set(header.AccessControlAllowCredentials, "true")
 	}
 	if len(config.AllowMethods) > 0 {
-		preflightHeaders.Set(headerACAMethods, strings.Join(config.AllowMethods, ","))
+		preflightHeaders.Set(header.AccessControlAllowMethods, strings.Join(config.AllowMethods, ","))
 	}
 	if len(config.AllowHeaders) > 0 {
-		preflightHeaders.Set(headerACAHeaders, strings.Join(config.AllowHeaders, ","))
+		preflightHeaders.Set(header.AccessControlAllowHeaders, strings.Join(config.AllowHeaders, ","))
 	}
 	if len(config.ExposeHeaders) > 0 {
-		headers.Set(headerACEHeaders, strings.Join(config.ExposeHeaders, ","))
+		headers.Set(header.AccessControlExposeHeaders, strings.Join(config.ExposeHeaders, ","))
 	}
 	if config.MaxAge > time.Duration(0) {
-		preflightHeaders.Set(headerACMaxAge, strconv.FormatInt(int64(config.MaxAge/time.Second), 10))
+		preflightHeaders.Set(header.AccessControlMaxAge, strconv.FormatInt(int64(config.MaxAge/time.Second), 10))
 	}
 	if config.AllowAllOrigins {
-		preflightHeaders.Set(headerACAOrigin, "*")
-		headers.Set(headerACAOrigin, "*")
+		preflightHeaders.Set(header.AccessControlAllowOrigin, "*")
+		headers.Set(header.AccessControlAllowOrigin, "*")
 	} else {
-		preflightHeaders.Add(headerVary, headerOrigin)
-		preflightHeaders.Add(headerVary, headerACRMethos)
-		preflightHeaders.Add(headerVary, headerACRHeaders)
-		headers.Set(headerVary, headerOrigin)
+		preflightHeaders.Add(header.Vary, header.Origin)
+		preflightHeaders.Add(header.Vary, header.AccessControlRequestMethod)
+		preflightHeaders.Add(header.Vary, header.AccessControlRequestHeaders)
+		headers.Set(header.Vary, header.Origin)
 
 		for _, v := range config.AllowOrigins {
 			allowOrigins[v] = true
@@ -71,11 +60,11 @@ func New(config Config) func(http.Handler) http.Handler {
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if origin := r.Header.Get(headerOrigin); len(origin) > 0 {
+			if origin := r.Header.Get(header.Origin); len(origin) > 0 {
 				h := w.Header()
 				if !config.AllowAllOrigins {
 					if allowOrigins[origin] {
-						h.Set(headerACAOrigin, origin)
+						h.Set(header.AccessControlAllowOrigin, origin)
 					} else {
 						w.WriteHeader(http.StatusForbidden)
 						return
