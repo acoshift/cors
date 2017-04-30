@@ -1,5 +1,8 @@
 # cors
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/acoshift/cors)](https://goreportcard.com/report/github.com/acoshift/cors)
+[![GoDoc](https://godoc.org/github.com/acoshift/cors?status.svg)](https://godoc.org/github.com/acoshift/cors)
+
 CORS middleware for Golang net/http
 
 ### Example
