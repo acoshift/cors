@@ -15,6 +15,33 @@ import (
 	"net/http"
 
 	"github.com/acoshift/cors"
+)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "OK")
+}
+
+func main() {
+	h := cors.New(cors.Config{
+		AllowOrigins:     []string{"localhost:8080"},
+		AllowMethods:     []string{http.MethodGet, http.MethodPost},
+		AllowHeaders:     []string{"Authorization"},
+		AllowCredentials: true,
+	})(http.HandlerFunc(handler))
+	http.ListenAndServe(":8080", h)
+}
+```
+
+or use with [middleware](https://github.com/acoshift/middleware)
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/acoshift/cors"
 	"github.com/acoshift/middleware"
 )
 
