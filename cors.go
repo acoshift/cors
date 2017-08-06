@@ -25,7 +25,7 @@ type Config struct {
 }
 
 // New creates new CORS middleware
-func New(config Config) func(http.Handler) http.Handler {
+func New(config Config) middleware.Middleware {
 	if config.Skipper == nil {
 		config.Skipper = middleware.DefaultSkipper
 	}
